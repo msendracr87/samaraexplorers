@@ -4,6 +4,8 @@ TourPlan Provider Onboarding - Lightweight Standard Library Web Server & Backend
 Features:
 - Serves English & Spanish onboarding pages and Admin Dashboard
 - Validates and stores submissions in SQLite database (submissions.db)
+- Asynchronous email notifications upon provider submission (SMTP)
+- HTTP Basic Authentication protection for admin endpoints
 - REST API for form submission, submission querying, and CSV/JSON export
 - Zero external dependencies (Python 3 standard library only)
 """
@@ -17,14 +19,26 @@ import mimetypes
 import urllib.parse
 import csv
 import io
+import base64
+import threading
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
 
 PORT = int(os.environ.get("PORT", 8080))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
-DB_PATH = os.path.join(BASE_DIR, "submissions.db")
+DB_PATH = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "submissions.db"))
+
+# Admin Authentication credentials
+ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")  # If set, enforces auth
 
 def init_db():
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
@@ -70,6 +84,75 @@ def init_db():
     conn.commit()
     conn.close()
 
+def _send_email_task(data, submission_id):
+    smtp_host = os.environ.get("SMTP_HOST")
+    if not smtp_host:
+        print("[Notification] SMTP_HOST not set. Notification email skipped.")
+        return
+
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASSWORD", "")
+    to_email = os.environ.get("NOTIFICATION_TO") or os.environ.get("NOTIFICATION_EMAIL")
+    if not to_email:
+        print("[Notification] NOTIFICATION_TO email not set. Notification email skipped.")
+        return
+
+    from_email = os.environ.get("NOTIFICATION_FROM") or smtp_user or "notifications@samaraexplorers.com"
+    admin_url = os.environ.get("ADMIN_URL", "https://samaraexplorers.onrender.com/admin.html")
+
+    try:
+        creditor_name = data.get("creditor_name", "Unknown")
+        tax_id = data.get("mailing_cedula_juridica", "N/A")
+        email = data.get("general_email", "N/A")
+        phone = data.get("general_phone", "N/A")
+        supplier_type = data.get("supplier_type", "N/A")
+        currency = data.get("default_currency", "N/A")
+        legal_name = data.get("mailing_razon_social", "N/A")
+        lang = data.get("language_page", "en").upper()
+
+        subject = f"🔔 New Provider Onboarding: {creditor_name} (#{submission_id})"
+        body = f"""Hello Samara Explorers Team,
+
+A new provider has submitted their onboarding details via the web portal:
+
+- Submission ID: #{submission_id}
+- Creditor / Trading Name: {creditor_name}
+- Legal Name (Razón Social): {legal_name}
+- Tax ID (Cédula): {tax_id}
+- Supplier Type: {supplier_type}
+- Currency: {currency}
+- Email: {email}
+- Phone: {phone}
+- Form Language: {lang}
+
+View all submissions in the Admin Dashboard:
+{admin_url}
+
+Best regards,
+TourPlan Automated Ingestion System
+"""
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = subject
+        msg["From"] = from_email
+        msg["To"] = to_email
+
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
+            if smtp_port in (587, 25):
+                server.starttls()
+                server.ehlo()
+            if smtp_user and smtp_pass:
+                server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        print(f"[Notification] Notification email successfully sent to {to_email} for submission #{submission_id}")
+    except Exception as e:
+        print(f"[Notification] Error sending email notification: {e}")
+
+def trigger_notification_email_async(data, submission_id):
+    thread = threading.Thread(target=_send_email_task, args=(data, submission_id), daemon=True)
+    thread.start()
+
 class TourPlanHandler(http.server.BaseHTTPRequestHandler):
     def send_json(self, data, status=200):
         content = json.dumps(data, ensure_ascii=False).encode('utf-8')
@@ -78,7 +161,7 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(content)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
         self.wfile.write(content)
 
@@ -86,8 +169,28 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
+
+    def check_auth(self):
+        if not ADMIN_PASSWORD:
+            return True  # If no password configured, access is allowed
+        auth_header = self.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Basic "):
+            return False
+        try:
+            decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
+            username, password = decoded.split(":", 1)
+            return username == ADMIN_USER and password == ADMIN_PASSWORD
+        except Exception:
+            return False
+
+    def request_auth(self):
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", 'Basic realm="TourPlan Admin Area"')
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(b"<h1>401 Unauthorized</h1><p>Access requires administrative credentials.</p>")
 
     def do_POST(self):
         parsed_url = urllib.parse.urlparse(self.path)
@@ -189,6 +292,9 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
             conn.commit()
             conn.close()
 
+            # Trigger email notification asynchronously
+            trigger_notification_email_async(data, submission_id)
+
             self.send_json({
                 "success": True,
                 "id": submission_id,
@@ -200,6 +306,12 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
+
+        # Protect administrative endpoints
+        if path in ("/admin", "/admin.html", "/api/submissions", "/api/export/csv"):
+            if not self.check_auth():
+                self.request_auth()
+                return
 
         # API: List all submissions
         if path == "/api/submissions":
@@ -227,8 +339,8 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
                 writer.writeheader()
                 for row in rows:
                     writer.writerow(dict(row))
-            
-            csv_data = output.getvalue().encode('utf-8-sig') # with BOM for Excel compatibility
+
+            csv_data = output.getvalue().encode('utf-8-sig')  # with BOM for Excel compatibility
             self.send_response(200)
             self.send_header("Content-Type", "text/csv; charset=utf-8")
             self.send_header("Content-Disposition", "attachment; filename=TourPlan_Creditor_Submissions.csv")
@@ -268,15 +380,21 @@ class TourPlanHandler(http.server.BaseHTTPRequestHandler):
         else:
             self.send_error(404, "File Not Found")
 
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
 def run_server():
     init_db()
-    with socketserver.TCPServer(("", PORT), TourPlanHandler) as httpd:
+    with ThreadedTCPServer(("", PORT), TourPlanHandler) as httpd:
+        auth_status = f"Protected (User: {ADMIN_USER})" if ADMIN_PASSWORD else "Unprotected (ADMIN_PASSWORD not set)"
         print(f"==================================================")
         print(f" TourPlan Provider Onboarding Portal Running:")
         print(f" - English Form:   http://localhost:{PORT}/")
         print(f" - Spanish Form:   http://localhost:{PORT}/es.html")
-        print(f" - Admin View:     http://localhost:{PORT}/admin.html")
+        print(f" - Admin View:     http://localhost:{PORT}/admin.html [{auth_status}]")
         print(f" - CSV Export API: http://localhost:{PORT}/api/export/csv")
+        print(f" - Database Path:  {DB_PATH}")
         print(f"==================================================")
         try:
             httpd.serve_forever()

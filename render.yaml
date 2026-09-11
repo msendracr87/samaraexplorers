@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: samaraexplorers-onboarding
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: ""
+    startCommand: python3 server.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true

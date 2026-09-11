@@ -1,4 +1,6 @@
 .DS_Store
 *.db
+TourPlan/
 __pycache__/
 *.py[cod]
+.env
