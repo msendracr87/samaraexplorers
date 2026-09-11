@@ -21,11 +21,11 @@ A lightweight, production-ready web application designed for external tourism pr
 ### 1. Launch the Server
 From the root of the project:
 ```bash
-python3 DataEntry/Creditors-Data-Entry/webform/server.py
+python3 webform/server.py
 ```
 Or navigate to the directory:
 ```bash
-cd DataEntry/Creditors-Data-Entry/webform
+cd webform
 python3 server.py
 ```
 
