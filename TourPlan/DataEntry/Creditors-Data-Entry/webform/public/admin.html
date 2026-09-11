@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourPlan - Submissions Backoffice</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px 60px;
+    }
+    .admin-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .data-table th {
+      background: var(--primary-color);
+      color: #ffffff;
+      padding: 12px 14px;
+      font-size: 13px;
+      text-align: left;
+    }
+    .data-table td {
+      padding: 12px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .data-table tr:hover {
+      background-color: #f8fafc;
+    }
+    .btn-export {
+      background: #107c41;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-export:hover {
+      background: #0b5e31;
+    }
+    .badge-lang {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-container" style="max-width: 1200px;">
+      <div>
+        <div class="brand-title">SAMARA EXPLORERS &bull; SUBMISSIONS DASHBOARD</div>
+        <div class="brand-subtitle">Backoffice Provider Ingestion & Review &bull; TourPlan Integration</div>
+      </div>
+      <div>
+        <a href="index.html" class="lang-link">English Form</a>
+        <a href="es.html" class="lang-link">Spanish Form</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-bar">
+      <div>
+        <h2>Provider Registrations (<span id="submissionCount">0</span>)</h2>
+        <p style="color: var(--text-muted); font-size: 13px;">All submissions recorded from the online onboarding forms</p>
+      </div>
+      <div>
+        <a href="/api/export/csv" class="btn-export">📥 Export to CSV / Excel</a>
+      </div>
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Language</th>
+          <th>Creditor / Trading Name</th>
+          <th>Legal Name (Razón Social)</th>
+          <th>Tax ID (Cédula)</th>
+          <th>Type</th>
+          <th>Currency</th>
+          <th>Email</th>
+          <th>Phone</th>
+        </tr>
+      </thead>
+      <tbody id="submissionsTableBody">
+        <tr>
+          <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 30px;">
+            Loading submissions...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    async function loadSubmissions() {
+      try {
+        const response = await fetch('/api/submissions');
+        const data = await response.json();
+        const tbody = document.getElementById('submissionsTableBody');
+        document.getElementById('submissionCount').innerText = data.count || 0;
+
+        if (!data.submissions || data.submissions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 30px;">No provider submissions recorded yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.submissions.map(sub => `
+          <tr>
+            <td><strong>#${sub.id}</strong></td>
+            <td>${sub.submitted_at}</td>
+            <td><span class="badge-lang">${sub.language_page || 'en'}</span></td>
+            <td><strong>${sub.creditor_name || '-'}</strong></td>
+            <td>${sub.mailing_razon_social || '-'}</td>
+            <td><code>${sub.mailing_cedula_juridica || '-'}</code></td>
+            <td>${sub.supplier_type || '-'}</td>
+            <td>${sub.default_currency || '-'}</td>
+            <td><a href="mailto:${sub.general_email}">${sub.general_email || '-'}</a></td>
+            <td>${sub.general_phone || '-'}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        document.getElementById('submissionsTableBody').innerHTML = '<tr><td colspan="10" style="text-align: center; color: red; padding: 30px;">Failed to load submissions from server.</td></tr>';
+      }
+    }
+
+    loadSubmissions();
+  </script>
+</body>
+</html>

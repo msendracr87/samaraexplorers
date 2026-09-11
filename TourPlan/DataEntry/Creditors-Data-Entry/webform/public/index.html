@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samara Explorers - Provider Onboarding Form</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-container">
+      <div>
+        <div class="brand-title">SAMARA EXPLORERS</div>
+        <div class="brand-subtitle">Provider Onboarding Portal &bull; TourPlan Integration</div>
+        <div class="header-contact">
+          <span>📞 Tel: <strong>8822-1000</strong></span>
+          <span>✉️ <a href="mailto:info@samaraexplorers.com">info@samaraexplorers.com</a></span>
+        </div>
+      </div>
+      <div class="lang-switch">
+        <span>Language:</span>
+        <a href="index.html" class="lang-link active">English</a>
+        <span>|</span>
+        <a href="es.html" class="lang-link">Español</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <div class="intro-banner">
+      <h2>Welcome to the Samara Explorers Provider Portal</h2>
+      <p>Please complete this form with your company details. This information will be integrated into our TourPlan reservations and accounting system to ensure prompt voucher issuance, contract setup, and payment processing. For assistance, contact our team at <strong>8822-1000</strong> or <a href="mailto:info@samaraexplorers.com">info@samaraexplorers.com</a>.</p>
+    </div>
+
+    <div id="alertBox" class="alert-box"></div>
+
+    <form id="providerForm" data-loading-text="Submitting Registration...">
+      <input type="hidden" name="language_page" value="en">
+
+      <!-- 1. GENERAL IDENTIFICATION -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>1. General Identification</span>
+          <span class="badge">Insert Creditor</span>
+        </div>
+        <div class="card-body form-grid">
+          <div class="form-group">
+            <label class="form-label" for="creditor_code">Supplier Code (TourPlan)</label>
+            <input type="text" id="creditor_code" name="creditor_code" class="form-control" placeholder="Leave blank if assigned by agency" maxlength="15">
+            <span class="field-help">Optional short code (e.g. HTLSJO).</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="creditor_name">
+              Creditor / Trading Name <span class="required-star">*</span>
+            </label>
+            <input type="text" id="creditor_name" name="creditor_name" class="form-control is-required" placeholder="e.g. Hotel Arenal Lodge" required>
+            <span class="field-help">Official commercial brand or trading name.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="local_creditor_name">Local Creditor Name</label>
+            <input type="text" id="local_creditor_name" name="local_creditor_name" class="form-control" placeholder="Local branch or native name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="default_currency">
+              Default Operating Currency <span class="required-star">*</span>
+            </label>
+            <select id="default_currency" name="default_currency" class="form-control is-required" required>
+              <option value="">-- Select Currency --</option>
+              <option value="USD">USD - US Dollar</option>
+              <option value="CRC">CRC - Costa Rican Colón</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+            </select>
+            <span class="field-help">Primary currency used for billing and rates.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. PHYSICAL ADDRESS -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>2. Physical Operating Address</span>
+          <span class="badge">Physical Location</span>
+        </div>
+        <div class="card-body">
+          <div class="section-action-bar">
+            <button type="button" id="btn_copy_mailing" class="btn-secondary">📋 Copy From Invoicing Address</button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="physical_name">Physical Location / Property Name</label>
+              <input type="text" id="physical_name" name="physical_name" class="form-control" placeholder="Name of physical establishment">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_address">Street Address</label>
+              <input type="text" id="physical_address" name="physical_address" class="form-control" placeholder="Exact street address or landmark directions">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_city">City / District / Canton</label>
+              <input type="text" id="physical_city" name="physical_city" class="form-control" placeholder="City or municipality">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_country">Country</label>
+              <input type="text" id="physical_country" name="physical_country" class="form-control" placeholder="Country where facility is located">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_razon_social">Operating Facility Legal Entity (Razón Social)</label>
+              <input type="text" id="physical_razon_social" name="physical_razon_social" class="form-control" placeholder="Optional physical entity name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_cedula_juridica">Facility Tax ID (Cédula Jurídica)</label>
+              <input type="text" id="physical_cedula_juridica" name="physical_cedula_juridica" class="form-control" placeholder="Optional local tax ID">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="physical_post_code">Postal / ZIP Code</label>
+              <input type="text" id="physical_post_code" name="physical_post_code" class="form-control" placeholder="Postal code">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. MAILING & INVOICING ADDRESS -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>3. Mailing & Invoicing Address</span>
+          <span class="badge">Billing Entity</span>
+        </div>
+        <div class="card-body">
+          <div class="section-action-bar">
+            <button type="button" id="btn_copy_physical" class="btn-secondary">📋 Copy From Physical Address</button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="mailing_name">Billing Contact / Department</label>
+              <input type="text" id="mailing_name" name="mailing_name" class="form-control" placeholder="e.g. Accounts Payable / Contabilidad">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_address">Billing Address / P.O. Box</label>
+              <input type="text" id="mailing_address" name="mailing_address" class="form-control" placeholder="Fiscal address or mailing box">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_city">Billing City</label>
+              <input type="text" id="mailing_city" name="mailing_city" class="form-control" placeholder="City of legal entity">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_country">Billing Country</label>
+              <input type="text" id="mailing_country" name="mailing_country" class="form-control" placeholder="Country of fiscal registration">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_razon_social">
+                Legal Entity Name (Razón Social) <span class="required-star">*</span>
+              </label>
+              <input type="text" id="mailing_razon_social" name="mailing_razon_social" class="form-control is-required" placeholder="Exact registered legal corporate name" required>
+              <span class="field-help">Required for tax invoices (Factura Electrónica).</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_cedula_juridica">
+                Corporate Tax ID (Cédula Jurídica) <span class="required-star">*</span>
+              </label>
+              <input type="text" id="mailing_cedula_juridica" name="mailing_cedula_juridica" class="form-control is-required" placeholder="e.g. 3-101-123456" required>
+              <span class="field-help">Official Taxpayer Registration ID.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mailing_post_code">Billing Postal Code</label>
+              <input type="text" id="mailing_post_code" name="mailing_post_code" class="form-control" placeholder="Postal / ZIP code">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. CONTACT CHANNELS -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>4. Contact Channels & Digital Communication</span>
+          <span class="badge">User Defined</span>
+        </div>
+        <div class="card-body form-grid">
+          <div class="form-group">
+            <label class="form-label" for="general_email">
+              General Booking / Contact Email <span class="required-star">*</span>
+            </label>
+            <input type="email" id="general_email" name="general_email" class="form-control is-required" placeholder="reservations@yourcompany.com" required>
+            <span class="field-help">Receives booking vouchers and inquiries.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="general_phone">
+              General Office Telephone <span class="required-star">*</span>
+            </label>
+            <input type="tel" id="general_phone" name="general_phone" class="form-control is-required" placeholder="+506 2222-0000" required>
+            <span class="field-help">Main office line with country code.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="whatsapp_sales">WhatsApp Sales / Bookings</label>
+            <input type="tel" id="whatsapp_sales" name="whatsapp_sales" class="form-control" placeholder="+506 8888-0000">
+            <span class="field-help">Direct line for quotes and reservations.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="whatsapp_operations">WhatsApp Operations (24/7 Support)</label>
+            <input type="tel" id="whatsapp_operations" name="whatsapp_operations" class="form-control" placeholder="+506 8888-1111">
+            <span class="field-help">Emergency line for passengers in destination.</span>
+          </div>
+
+          <div class="form-group col-span-2">
+            <label class="form-label" for="website">Official Website</label>
+            <input type="url" id="website" name="website" class="form-control" placeholder="https://www.yourcompany.com">
+          </div>
+
+          <div class="form-group col-span-2">
+            <label class="form-label" for="notes">Additional Operational Information</label>
+            <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Any special instructions or operational details"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. SERVICE CLASSIFICATION & PAYMENT TERMS -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>5. Service Classification & Payment Terms</span>
+          <span class="badge">Supplier Analysis</span>
+        </div>
+        <div class="card-body form-grid">
+          <div class="form-group">
+            <label class="form-label" for="supplier_type">
+              Supplier Type <span class="required-star">*</span>
+            </label>
+            <select id="supplier_type" name="supplier_type" class="form-control is-required" required>
+              <option value="">-- Select Supplier Type --</option>
+              <option value="Hotels (HO)">Hotels (HO)</option>
+              <option value="Transportation (TR)">Transportation (TR)</option>
+              <option value="Tour-Operator (TO)">Tour-Operator (TO)</option>
+              <option value="Guides (GU)">Guides (GU)</option>
+              <option value="Restaurants (RE)">Restaurants (RE)</option>
+              <option value="Airlines (AL)">Airlines (AL)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="payment_policy">
+              Payment Policy (Política de Pago) <span class="required-star">*</span>
+            </label>
+            <select id="payment_policy" name="payment_policy" class="form-control is-required" required>
+              <option value="">-- Select Payment Policy --</option>
+              <option value="Cuenta Corriente (CC)">Cuenta Corriente (CC) - Credit Account</option>
+              <option value="Pre-Payment (PP)">Pre-Payment (PP)</option>
+              <option value="Variable (VV)">Variable (VV)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. VIRTUAL CREDIT CARD (VCC) -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>6. Payment Settlement & Virtual Credit Card (VCC)</span>
+          <span class="badge">VCC Setup</span>
+        </div>
+        <div class="card-body">
+          <label class="checkbox-group">
+            <input type="checkbox" id="vcc_active" name="vcc_active" value="1">
+            <span><strong>Enable Virtual Credit Card (VCC) Settlements</strong> (Check if you accept single-use virtual cards for booking payment)</span>
+          </label>
+
+          <div id="vcc_details_group" class="vcc-conditional-box">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="vcc_activation_type">VCC Activation Timing</label>
+                <select id="vcc_activation_type" name="vcc_activation_type" class="form-control">
+                  <option value="">-- Select Activation Timing --</option>
+                  <option value="Check In">Check In (On arrival date)</option>
+                  <option value="Check Out">Check Out (On departure date)</option>
+                  <option value="Immediate">Immediate (Upon booking confirmation)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="vcc_currency">VCC Currency</label>
+                <select id="vcc_currency" name="vcc_currency" class="form-control">
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="CRC">CRC - Costa Rican Colón</option>
+                  <option value="EUR">EUR - Euro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="vcc_days_prior">Days Prior to Arrival</label>
+                <input type="number" id="vcc_days_prior" name="vcc_days_prior" class="form-control" placeholder="0" min="0" max="90">
+                <span class="field-help">Days before arrival when card is issued.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="vcc_duration">Validity Duration (Days)</label>
+                <input type="number" id="vcc_duration" name="vcc_duration" class="form-control" placeholder="30" min="1" max="180">
+                <span class="field-help">Number of days card remains active for charging.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. COMMUNICATION & LANGUAGE -->
+      <section class="form-card">
+        <div class="card-header">
+          <span>7. Communication Preferences</span>
+          <span class="badge">Miscellaneous</span>
+        </div>
+        <div class="card-body form-grid">
+          <div class="form-group">
+            <label class="form-label" for="language">Preferred Documentation Language</label>
+            <select id="language" name="language" class="form-control">
+              <option value="SP">Spanish (Español)</option>
+              <option value="EN" selected>English</option>
+              <option value="DE">German (Deutsch)</option>
+              <option value="FR">French (Français)</option>
+              <option value="IT">Italian (Italiano)</option>
+              <option value="PT">Portuguese (Português)</option>
+            </select>
+            <span class="field-help">Language used for vouchers, contracts, and system messages.</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="submit-section">
+        <button type="submit" id="submitBtn" class="btn-primary">Submit Provider Registration</button>
+      </div>
+    </form>
+
+  </main>
+
+  <footer class="site-footer">
+    Samara Explorers &copy; 2026. All rights reserved. &bull; Contact: 8822-1000 &bull; <a href="mailto:info@samaraexplorers.com" style="color: inherit;">info@samaraexplorers.com</a>
+  </footer>
+
+  <script src="js/form.js"></script>
+</body>
+</html>
